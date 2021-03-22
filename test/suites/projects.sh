@@ -859,3 +859,29 @@ test_projects_restrictions() {
   lxc network delete "n-proj$$"
   lxc storage volume delete "${pool}" "v-proj$$"
 }
+
+# Test project state api
+test_projects_usage() {
+  # Set configuration on the default project
+  lxc project switch default
+  lxc project create default -c limits.cpu=5 -c limits.memory=1GB -c limits.disk=10GB -c limits.networks=3 -c limits.processes=40
+
+  # Create a profile defining resource allocations
+  lxc profile copy default projectstatetests
+  lxc profile set projectstatetests limits.cpu=1 limits.memory=512MB  limits.processes=20
+  lxc profile device set projectstatetests root size=3GB
+
+  # Spin up a container
+  deps/import-busybox --project default --alias testimage
+  lxc init testimage c1 --profile projectstatetests
+
+  # Test for expected values
+  lxc project info default | grep -q "containers: \"1\"$"
+  lxc project info default | grep -q "cpu: \"1\"$"
+  # Disk and memory might be variable based on other factors
+  # but this expects those factors to not be significant
+  lxc project info default | grep -q "disk: \"03.*GB\"$"
+  lxc project info default | grep -q "memory: 512.*MB$"
+  lxc project info default | grep -q "networks: \"1\"$"
+  lxc project info default | grep -q "virtual-machines: \"0\"$"
+}

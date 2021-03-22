@@ -68,6 +68,23 @@ func (r *ProtocolLXD) GetProject(name string) (*api.Project, string, error) {
 	return &project, etag, nil
 }
 
+// GetProjectState returns a Project state for the provided name
+func (r *ProtocolLXD) GetProjectState(name string) (*api.ProjectState, string, error) {
+	if !r.HasExtension("projects") {
+		return nil, "", fmt.Errorf("The server is missing the required \"projects\" API extension")
+	}
+
+	projectState := api.ProjectState{}
+
+	// Fetch the raw value
+	etag, err := r.queryStruct("GET", fmt.Sprintf("/projects/%s/state", url.PathEscape(name)), nil, "", &projectState)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &projectState, etag, nil
+}
+
 // CreateProject defines a new container project
 func (r *ProtocolLXD) CreateProject(project api.ProjectsPost) error {
 	if !r.HasExtension("projects") {

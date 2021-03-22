@@ -65,6 +65,10 @@ func (c *cmdProject) Command() *cobra.Command {
 	projectShowCmd := cmdProjectShow{global: c.global, project: c}
 	cmd.AddCommand(projectShowCmd.Command())
 
+	// Info
+	projectGetInfo := cmdProjectInfo{global: c.global, project: c}
+	cmd.AddCommand(projectGetInfo.Command())
+
 	// Set default
 	projectSwitchCmd := cmdProjectSwitch{global: c.global, project: c}
 	cmd.AddCommand(projectSwitchCmd.Command())
@@ -722,4 +726,57 @@ func (c *cmdProjectSwitch) Run(cmd *cobra.Command, args []string) error {
 	conf.Remotes[remote] = rc
 
 	return conf.SaveConfig(c.global.confPath)
+}
+
+// Info
+type cmdProjectInfo struct {
+	global  *cmdGlobal
+	project *cmdProject
+}
+
+func (c *cmdProjectInfo) Command() *cobra.Command {
+	cmd := &cobra.Command{}
+	cmd.Use = usage("info", i18n.G("[<remote>:]<project> <key>"))
+	cmd.Short = i18n.G("Get a summary of resource allocations")
+	cmd.Long = cli.FormatSection(i18n.G("Description"), i18n.G(
+		`Get a summary of resource allocations`))
+
+	cmd.RunE = c.Run
+
+	return cmd
+}
+
+func (c *cmdProjectInfo) Run(cmd *cobra.Command, args []string) error {
+	// Sanity checks
+	exit, err := c.global.CheckArgs(cmd, args, 1, 1)
+	if exit {
+		return err
+	}
+
+	// Parse remote
+	resources, err := c.global.ParseServers(args[0])
+	if err != nil {
+		return err
+	}
+
+	resource := resources[0]
+
+	if resource.name == "" {
+		return fmt.Errorf(i18n.G("Missing project name"))
+	}
+
+	// Get the current allocations
+	projectState, _, err := resource.server.GetProjectState(resource.name)
+	if err != nil {
+		return err
+	}
+
+	data, err := yaml.Marshal(&projectState)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s", data)
+
+	return nil
 }

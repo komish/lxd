@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -50,6 +51,12 @@ var projectCmd = APIEndpoint{
 	Patch:  APIEndpointAction{Handler: projectPatch, AccessHandler: allowAuthenticated},
 	Post:   APIEndpointAction{Handler: projectPost},
 	Put:    APIEndpointAction{Handler: projectPut, AccessHandler: allowAuthenticated},
+}
+
+var projectStateCmd = APIEndpoint{
+	Path: "projects/{name}/state",
+
+	Get: APIEndpointAction{Handler: projectStateGet, AccessHandler: allowAuthenticated},
 }
 
 // swagger:operation GET /1.0/projects projects projects_get
@@ -132,6 +139,7 @@ var projectCmd = APIEndpoint{
 //     $ref: "#/responses/Forbidden"
 //   "500":
 //     $ref: "#/responses/InternalServerError"
+
 func projectsGet(d *Daemon, r *http.Request) response.Response {
 	recursion := util.IsRecursionRequest(r)
 
@@ -739,6 +747,45 @@ func projectDelete(d *Daemon, r *http.Request) response.Response {
 	}
 
 	return response.EmptySyncResponse
+}
+
+func projectStateGet(d *Daemon, r *http.Request) response.Response {
+	name := mux.Vars(r)["name"]
+
+	// Check user permissions
+	if !rbac.UserHasPermission(r, name, "view") {
+		return response.Forbidden(nil)
+	}
+
+	var projectState api.ProjectState
+	projectState.Name = name
+
+	var allocations map[string]string
+
+	err := d.cluster.Transaction(func(tx *db.ClusterTx) error {
+		result, err := projecthelpers.GetCurrentAllocations(tx, name)
+		if err != nil {
+			return err
+		}
+
+		allocations = result
+
+		return nil
+	})
+
+	if err != nil {
+		return response.SmartError(err)
+	}
+
+	networks, err := d.cluster.GetNetworks(name)
+	if err != nil {
+		return response.SmartError(err)
+	}
+
+	allocations["networks"] = strconv.Itoa(len(networks))
+	projectState.Allocated = allocations
+
+	return response.SyncResponse(true, &projectState)
 }
 
 // Check if a project is empty.

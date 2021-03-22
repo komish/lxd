@@ -2853,6 +2853,31 @@ HTTP code for this should be 202 (Accepted).
 
 Attempting to delete the `default` project will return the 403 (Forbidden) HTTP code.
 
+### `/1.0/projects/<name>/state`
+#### GET
+ * Description: project usage
+ * Introduced: with API extension `project_usage`
+ * Authentication: trusted
+ * Operation: sync
+ * Return: dict representing the project allocations
+
+Output:
+
+```json
+{
+    "name": "default",
+    "allocated": {
+      "containers": "0",
+      "cpu": "0",
+      "disk": "0889.8MB",
+      "memory": "0B",
+      "networks": "1",
+      "processes": "0",
+      "virtual-machines": "0"
+    }
+}
+```
+
 ### `/1.0/storage-pools`
 #### GET
  * Description: list of storage pools

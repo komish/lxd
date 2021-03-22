@@ -64,3 +64,12 @@ type Project struct {
 func (project *Project) Writable() ProjectPut {
 	return project.ProjectPut
 }
+
+// ProjectState represents the existing usage of resources by an LXD project
+//
+// API extension: project_usage
+type ProjectState struct {
+	Allocated map[string]string `json:"allocated" yaml:"allocated"`
+
+	Name string `json:"name" yaml:"name"`
+}

@@ -1326,7 +1326,6 @@ Adds a new `security.acls` property to OVN networks and OVN NICs, allowing Netwo
 Adds new `images.auto_update_cached` and `images.auto_update_interval` config keys which
 allows configuration of images auto update in projects
 
-<<<<<<< Updated upstream
 ## projects\_restricted\_cluster\_target
 Adds new `restricted.cluster.target` config key to project which prevent the user from using --target
 to specify what cluster member to place a workload on or the ability to move a workload between members.
@@ -1338,8 +1337,6 @@ what architecture to go with when no specific one is specified as part of the im
 ## network\_ovn\_acl\_defaults
 Adds new `security.acls.default.{in,e}gress.action` and `security.acls.default.{in,e}gress.logged` config keys for
 OVN networks and NICs. This replaces the removed ACL `default.action` and `default.logged` keys.
-=======
 ## project_usage
 Adds an API endpoint to get current resource allocations in a project. 
 Accessible at API `GET /1.0/projects/<name>/state`.
->>>>>>> Stashed changes

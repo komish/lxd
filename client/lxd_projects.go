@@ -70,8 +70,8 @@ func (r *ProtocolLXD) GetProject(name string) (*api.Project, string, error) {
 
 // GetProjectState returns a Project state for the provided name
 func (r *ProtocolLXD) GetProjectState(name string) (*api.ProjectState, string, error) {
-	if !r.HasExtension("projects") {
-		return nil, "", fmt.Errorf("The server is missing the required \"projects\" API extension")
+	if !r.HasExtension("project_usage") {
+		return nil, "", fmt.Errorf("The server is missing the required \"project_usage\" API extension")
 	}
 
 	projectState := api.ProjectState{}
